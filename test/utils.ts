@@ -8,9 +8,8 @@ export function getOverrideOptions(): TransactionRequest {
   };
 }
 
-const setStorageAt = (address: string, slot: string, val: string) => {
+const setStorageAt = (address: string, slot: string, val: string) =>
   hre.network.provider.send("hardhat_setStorageAt", [address, slot, val]);
-};
 
 const tokenBalancesSlot = async (token: ERC20) => {
   const val: string = "0x" + "12345".padStart(64, "0");
