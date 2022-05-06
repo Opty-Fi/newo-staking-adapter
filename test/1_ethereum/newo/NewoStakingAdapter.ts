@@ -1,17 +1,17 @@
 import hre from "hardhat";
 import { Artifact } from "hardhat/types";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { default as HarvestExports } from "@optyfi/defi-legos/ethereum/harvest.finance/contracts";
-import { HarvestFinanceAdapter } from "../../../typechain/HarvestFinanceAdapter";
+import newoStakingVaults from "../../../helpers/newoStakingVaults.json";
+import { NewoStakingAdapter } from "../../../typechain/NewoStakingAdapter";
 import { TestDeFiAdapter } from "../../../typechain/TestDeFiAdapter";
 import { LiquidityPool, Signers } from "../types";
-import { shouldBehaveLikeHarvestFinanceAdapter } from "./HarvestFinanceAdapter.behavior";
+import { shouldBehaveLikeNewoStakingAdapter } from "./NewoStakingAdapter.behavior";
 import { IUniswapV2Router02 } from "../../../typechain";
 import { getOverrideOptions } from "../../utils";
 
 const { deployContract } = hre.waffle;
 
-const HarvestFinancePools = HarvestExports.harvestV1Pools;
+const NewoStakingVaults = newoStakingVaults;
 
 describe("Unit tests", function () {
   before(async function () {
@@ -28,13 +28,13 @@ describe("Unit tests", function () {
       await hre.ethers.getContractAt("IUniswapV2Router02", "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D")
     );
 
-    // deploy Harvest Finance Adapter
-    const harvestFinanceAdapterArtifact: Artifact = await hre.artifacts.readArtifact("HarvestFinanceAdapter");
-    this.harvestFinanceAdapter = <HarvestFinanceAdapter>(
+    // deploy Newo Staking Adapter
+    const newoStakingAdapterArtifact: Artifact = await hre.artifacts.readArtifact("NewoStakingAdapter");
+    this.newoStakingAdapter = <NewoStakingAdapter>(
       await deployContract(
         this.signers.deployer,
-        harvestFinanceAdapterArtifact,
-        ["0x99fa011e33a8c6196869dec7bc407e896ba67fe3"],
+        newoStakingAdapterArtifact,
+        ["0x99fa011E33A8c6196869DeC7Bc407E896BA67fE3"],
         getOverrideOptions(),
       )
     );
@@ -55,32 +55,11 @@ describe("Unit tests", function () {
       value: hre.ethers.utils.parseEther("10"),
       ...getOverrideOptions(),
     });
-
-    // whitelist TestDeFiAdapter contract into HarvestFinance's Vaults
-    // by impersonating the governance's address
-    const harvestFinanceGovernance = "0xf00dD244228F51547f0563e60bCa65a30FBF5f7f";
-    const harvestFinanceController = "0x3cC47874dC50D98425ec79e647d83495637C55e3";
-    await hre.network.provider.request({
-      method: "hardhat_impersonateAccount",
-      params: [harvestFinanceGovernance],
-    });
-    const harvestController = await hre.ethers.getContractAt(
-      "IHarvestController",
-      harvestFinanceController,
-      await hre.ethers.getSigner(harvestFinanceGovernance),
-    );
-    await this.signers.admin.sendTransaction({
-      to: harvestFinanceGovernance,
-      value: hre.ethers.utils.parseEther("1000"),
-      ...getOverrideOptions(),
-    });
-    await harvestController.addToWhitelist(this.testDeFiAdapter.address, getOverrideOptions());
-    await harvestController.addCodeToWhitelist(this.testDeFiAdapter.address, getOverrideOptions());
   });
 
-  describe("HarvestFinanceAdapter", function () {
-    Object.keys(HarvestFinancePools).map((token: string) => {
-      shouldBehaveLikeHarvestFinanceAdapter(token, (HarvestFinancePools as LiquidityPool)[token]);
+  describe("NewoStakingAdapter", function () {
+    Object.keys(NewoStakingVaults).map((token: string) => {
+      shouldBehaveLikeNewoStakingAdapter(token, (NewoStakingVaults as LiquidityPool)[token]);
     });
   });
 });

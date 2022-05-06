@@ -8,8 +8,9 @@ export function getOverrideOptions(): TransactionRequest {
   };
 }
 
-const setStorageAt = (address: string, slot: string, val: string) =>
+const setStorageAt = (address: string, slot: string, val: string) => {
   hre.network.provider.send("hardhat_setStorageAt", [address, slot, val]);
+};
 
 const tokenBalancesSlot = async (token: ERC20) => {
   const val: string = "0x" + "12345".padStart(64, "0");
@@ -60,11 +61,13 @@ export async function setTokenBalanceInStorage(token: ERC20, account: string, am
           .padStart(64, "0"),
     );
   } else {
+    let slot = ethers.utils.keccak256(
+      ethers.utils.defaultAbiCoder.encode(["address", "uint256"], [account, balancesSlot.index]),
+    );
+    while (slot.startsWith("0x0")) slot = "0x" + slot.slice(3);
     return setStorageAt(
       token.address,
-      ethers.utils.keccak256(
-        ethers.utils.defaultAbiCoder.encode(["address", "uint256"], [account, balancesSlot.index]),
-      ),
+      slot,
       "0x" +
         ethers.utils
           .parseUnits(amount, await token.decimals())
